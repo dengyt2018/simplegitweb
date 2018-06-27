@@ -6,15 +6,19 @@ import os
 from dulwich.repo import Repo
 from dulwich.web import *
 
+from jinja2 import Environment, PackageLoader, select_autoescape, Template
+
+env = Environment(
+    loader=PackageLoader('gitserver', 'templates'),
+    autoescape=select_autoescape(['html'])
+)
+
 CONFIG_NAME = 'gitserver.json'
 
-html_template="""
-"""
-
 def get_root_index(req, backen, mat):
-    req.respond(HTTP_OK, "text/plain")
-    x = '\n'.join([c for c in backen.repos.keys()])
-    yield x.encode()
+    req.respond(HTTP_OK, 'text/html')
+    repos = ";".join([c for c in backen.repos.keys()])
+    yield env.get_template("index.html").render(repos_list=repos).encode()
 
     
 class InitRepoPath():
@@ -39,19 +43,21 @@ class InitRepoPath():
             return SCANPATH
         
     def get_backends(self):
-        path = self.get_scanpath()
+        path = os.path.abspath(self.get_scanpath())
         try:
             reposdir = os.listdir(path)
         except FileNotFoundError:
             return None
+
         backends = dict()
         for i in reposdir:
+            repo_path = os.path.join(path, i)
             try:
-                repo = Repo(os.path.join(path, i))
+                repo = Repo(repo_path)
             except:
                 continue
-            
-            backends[str('/'+os.path.split(repo.path)[-1])] = repo
+            backends[str('/'+i)] = repo
+            del repo
         return backends
 
     def __repr__(self):
