@@ -1,8 +1,18 @@
 <!DOCTYPE html>
 <html>
 <title>My Simple Git Server</title>
+<style>
+#server_list {
+	margin: auto;
+	width: 25%;
+	text-align: center;
+	border: 3px solid green;
+    padding: 10px;
+}
+</style>
 <body>
 <div id="server_list"></div>
+
 <script type="text/javascript">
 var repos = "{{ repos_list }}"
 if (repos.indexOf(';')) {
@@ -17,6 +27,9 @@ origin = window.location.origin
 l = repos.length
 for(i = 0; i < l; i++) {
 	document.getElementById("server_list").innerHTML += "<p>"+origin + repos[i] + "</p>";
+}
+function reloadPage() {
+   window.location.href = window.location.href;
 }
 </script>
 </body>
