@@ -9,9 +9,22 @@
 	border: 3px solid green;
     padding: 10px;
 }
+#add_newrepo {
+	margin: auto;
+	width: 25%;
+	text-align: center;
+    padding: 10px;
+}
 </style>
 <body>
 <div id="server_list"></div>
+<div id="add_newrepo">
+	<form method="get" action="repository">
+		<h4>Init a new bare Repository</h4><br>
+		<input type="text" name="add_new_repository">
+		<input type="submit" value="Init">
+	</form>
+</div>
 
 <script type="text/javascript">
 var repos = "{{ repos_list }}"

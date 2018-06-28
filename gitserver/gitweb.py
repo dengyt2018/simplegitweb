@@ -18,32 +18,39 @@ CONFIG_NAME = 'gitserver.json'
 def get_root_index(req, backen, mat):
     req.respond(HTTP_OK, 'text/html')
     repos = ";".join([c for c in backen.repos.keys()])
+    params = parse_qs(req.environ['QUERY_STRING'])
+    new_repository = params.get('add_new_repository', [None])[0]+".git"
+    
+    if new_repository and new_repository not in repos.split(";"):
+        #Repo.init_bare(os.path.join(InitRepoPath(CONFIG_NAME).get_scanpath(), new_repository), mkdir=True)
+        pass
+
     yield env.get_template("index.html").render(repos_list=repos).encode()
 
-    
+
 class InitRepoPath():
     def __init__(self, CONFIG_NAME=None):
-        self.CONFIG_NAME = CONFIG_NAME
-        if self.CONFIG_NAME:
-            self.CONFIG = self.get_CONFIG() 
+        self.config_name = CONFIG_NAME
+        if self.config_name:
+            self.config = self.get_config() 
     
-    def get_CONFIG(self):
-        if Path(self.CONFIG_NAME).exists():
-            with open(self.CONFIG_NAME, 'r') as fp:
-                CONFIG = copy.deepcopy(json.loads(fp.read()))
-            if CONFIG:
-                return CONFIG
+    def get_config(self):
+        if Path(self.config_name).exists():
+            with open(self.config_name, 'r') as fp:
+                config = copy.deepcopy(json.loads(fp.read()))
+            if config:
+                return config
 
     def __call__(self):
-        return self.CONFIG if self.CONFIG else None
-    
+        return self.config if self.config else None
+
     def get_scanpath(self):
-        if self.CONFIG and self.CONFIG.get('scanpath'):
-            SCANPATH = self.CONFIG['scanpath']
-            return SCANPATH
+        if self.config and self.config.get('scanpath'):
+            scanpath = os.path.abspath(self.config['scanpath'])
+            return scanpath
         
     def get_backends(self):
-        path = os.path.abspath(self.get_scanpath())
+        path = self.get_scanpath()
         try:
             reposdir = os.listdir(path)
         except FileNotFoundError:
@@ -61,9 +68,10 @@ class InitRepoPath():
         return backends
 
     def __repr__(self):
-        return str(self.CONFIG)
+        return str(self.config)
         
 HTTPGitApplication.services[('GET', re.compile('^/$'))] = get_root_index
+HTTPGitApplication.services[('GET', re.compile('^/repository'))] = get_root_index
 
 def main():
     """Entry point for starting an HTTP git server."""
