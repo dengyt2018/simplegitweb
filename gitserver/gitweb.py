@@ -1,7 +1,8 @@
 from pathlib import Path
-import json
+from configparser import ConfigParser
 import copy
 import os
+
 
 from dulwich.repo import Repo
 from dulwich.web import *
@@ -18,7 +19,6 @@ env = Environment(
     autoescape=select_autoescape(['html'])
 )
 
-CONFIG_NAME = 'gitserver.json'
 
 def get_root_index(req, backen, mat):
     req.respond(HTTP_OK, 'text/html')
@@ -35,7 +35,7 @@ def add_new_repository(req, backen, mat):
     new_repository = params.get('add_new_repository', [None])[0]+".git"
 
     if new_repository and new_repository not in repos.split(";"):
-        repo_dir = os.path.join(InitRepoPath(CONFIG_NAME).get_scanpath(), new_repository)
+        repo_dir = os.path.join(InitRepoPath().get_scanpath(), new_repository)
         try:
             Repo.init_bare(repo_dir, mkdir=True)
         except PermissionError:
@@ -58,36 +58,77 @@ def add_new_repository(req, backen, mat):
                                                             repos_make_message=repos_make_message,
                                                             repos_make=repos_make).encode()
 
+        
+HTTPGitApplication.services[('GET', re.compile('^/$'))] = get_root_index
+HTTPGitApplication.services[('GET', re.compile('^/repository'))] = add_new_repository
+
+
 class InitRepoPath():
-    def __init__(self, CONFIG_NAME=None):
-        self.config_name = CONFIG_NAME
-        if self.config_name:
-            self.config = self.get_config() 
+
+    def __init__(self):
+        self.config = ConfigParser()
+
+        CONFIG_NAME = 'gitserver.conf'
+        self.home_path = os.path.join(str(Path.home()), CONFIG_NAME)
+        self.etc_path = os.path.join('/etc', CONFIG_NAME)
+        self.config_path = [CONFIG_NAME, self.home_path, self.etc_path]
+
+        for path in self.config_path:
+            if Path(path).exists():
+                self.config.read(path)
+                break
+            else:
+                self.config["DEFAULT"] = {
+                        "scanpath": ".",
+                        "listen_address": "127.0.0.5",
+                        "port": 3000
+                    }
+                try:
+                    with open(path, 'w') as configfile:
+                        self.config.write(configfile)
+                except (PermissionError, IOError):
+                    continue
+                except:
+                    pass
     
-    def get_config(self):
-        if Path(self.config_name).exists():
-            with open(self.config_name, 'r') as fp:
-                config = copy.deepcopy(json.loads(fp.read()))
-            if config:
-                return config
-
-    def __call__(self):
-        return self.config if self.config else None
-
     def get_scanpath(self):
-        if self.config and self.config.get('scanpath'):
-            scanpath = os.path.abspath(self.config['scanpath'])
+        if self.config["DEFAULT"]['scanpath']:
+            scanpath = os.path.abspath(self.config["DEFAULT"]['scanpath'])
             return scanpath
+    
+    def get_listen_address(self):
+        listen_address = self.config["DEFAULT"]["listen_address"]
+        port = int(self.config["DEFAULT"]["port"])
+        
+        if (listen_address and port):
+            return listen_address, port
+        else:
+            return "127.0.0.5", 3000
         
     def get_backends(self):
         path = self.get_scanpath()
+        backends = dict()
+        
+        def create_testRepo():
+            try:
+                os.makedirs(path)
+            except:
+                return []
+            else:
+                testRepo = "testRepo.git"
+                repo = Repo.init_bare(os.path.join(path, testRepo), mkdir=True)
+                backends[str('/') + testRepo] = repo
+            return os.listdir(path)
+
         try:
             reposdir = os.listdir(path)
         except FileNotFoundError:
-            return None
+            reposdir = create_testRepo()
 
-        backends = dict()
         for i in reposdir:
+            if i == ".git":
+                return {}
+
             repo_path = os.path.join(path, i)
             try:
                 repo = Repo(repo_path)
@@ -95,19 +136,19 @@ class InitRepoPath():
                 continue
             backends[str('/'+i)] = repo
             del repo
-        return backends
 
-    def __repr__(self):
-        return str(self.config)
-        
-HTTPGitApplication.services[('GET', re.compile('^/$'))] = get_root_index
-HTTPGitApplication.services[('GET', re.compile('^/repository'))] = add_new_repository
+        if not backends:
+            create_testRepo()
+                
+        return backends
 
 def main():
     """Entry point for starting an HTTP git server."""
-    listen_address, port = "127.0.0.5", 3000
+    init = InitRepoPath()
 
-    backend = DictBackend(InitRepoPath(CONFIG_NAME).get_backends())
+    listen_address, port = init.get_listen_address()
+
+    backend = DictBackend(init.get_backends())
         
     app = make_wsgi_chain(backend)
     server = make_server(listen_address, port, app,

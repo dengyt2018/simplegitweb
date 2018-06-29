@@ -115,3 +115,4 @@ os
 .pydevproject
 .settings/
 gitserver/gitserver.json
+gitserver/gitserver.conf
