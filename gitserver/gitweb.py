@@ -69,7 +69,10 @@ class InitRepoPath():
         self.config = ConfigParser()
 
         CONFIG_NAME = 'gitserver.conf'
-        self.home_path = os.path.join(str(Path.home()), "."+CONFIG_NAME)
+        try:
+            self.home_path = os.path.join(str(Path.home()), "."+CONFIG_NAME)
+        except AttributeError:
+            self.home_path = os.path.join(os.path.expanduser("~"), "."+CONFIG_NAME)
         self.etc_path = os.path.join('/etc', CONFIG_NAME)
         self.config_path = [CONFIG_NAME, self.home_path, self.etc_path]
 
