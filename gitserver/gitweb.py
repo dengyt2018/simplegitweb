@@ -24,11 +24,12 @@ def get_root_index(req, backen, mat):
     req.respond(HTTP_OK, 'text/html')
     repos = ";".join([c for c in backen.repos.keys()])
 
-    yield env.get_template("index.html").render(repos_list=repos).encode()
+    yield env.get_template("index_base.html").render(repos_list=repos).encode()
 
 def add_new_repository(req, backen, mat):
     req.respond(HTTP_OK, 'text/html')
     repos = ";".join([c for c in backen.repos.keys()])
+    repos_make = None
     params = parse_qs(req.environ['QUERY_STRING'])
     new_repository = params.get('add_new_repository', [None])[0]+".git"
 
@@ -36,8 +37,12 @@ def add_new_repository(req, backen, mat):
         repo_dir = os.path.join(InitRepoPath(CONFIG_NAME).get_scanpath(), new_repository)
         try:
             Repo.init_bare(repo_dir, mkdir=True)
-        except:
-            pass
+        except PermissionError:
+            repos_make = "make repository folder permission error."
+        except FileExistsError:
+            repos_make = "make repository folder file exists error."
+        except OSError:
+            repos_make = "make repository folder os error."
         else:
             try:
                 backen.repos[str('/' + new_repository)] = Repo(repo_dir)
@@ -45,8 +50,9 @@ def add_new_repository(req, backen, mat):
                 pass
             finally:
                 repos = ";".join([c for c in backen.repos.keys()])
+                repos_make = "ok"
 
-    yield env.get_template("index.html").render(repos_list=repos).encode()
+    yield env.get_template("add_new_repository.html").render(repos_list=repos, repos_make=repos_make).encode()
 
 class InitRepoPath():
     def __init__(self, CONFIG_NAME=None):
