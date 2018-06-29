@@ -114,4 +114,4 @@ os
 .project
 .pydevproject
 .settings/
-
+gitserver/gitserver.json

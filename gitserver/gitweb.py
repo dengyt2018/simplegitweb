@@ -8,8 +8,13 @@ from dulwich.web import *
 
 from jinja2 import Environment, PackageLoader, select_autoescape, Template
 
+try:
+    from urlparse import parse_qs
+except ImportError:
+    from urllib.parse import parse_qs
+
 env = Environment(
-    loader=PackageLoader('gitserver', 'templates'),
+    loader=PackageLoader(__name__, 'templates'),
     autoescape=select_autoescape(['html'])
 )
 
@@ -18,15 +23,30 @@ CONFIG_NAME = 'gitserver.json'
 def get_root_index(req, backen, mat):
     req.respond(HTTP_OK, 'text/html')
     repos = ";".join([c for c in backen.repos.keys()])
-    params = parse_qs(req.environ['QUERY_STRING'])
-    new_repository = params.get('add_new_repository', [None])[0]+".git"
-    
-    if new_repository and new_repository not in repos.split(";"):
-        #Repo.init_bare(os.path.join(InitRepoPath(CONFIG_NAME).get_scanpath(), new_repository), mkdir=True)
-        pass
 
     yield env.get_template("index.html").render(repos_list=repos).encode()
 
+def add_new_repository(req, backen, mat):
+    req.respond(HTTP_OK, 'text/html')
+    repos = ";".join([c for c in backen.repos.keys()])
+    params = parse_qs(req.environ['QUERY_STRING'])
+    new_repository = params.get('add_new_repository', [None])[0]+".git"
+
+    if new_repository and new_repository not in repos.split(";"):
+        repo_dir = os.path.join(InitRepoPath(CONFIG_NAME).get_scanpath(), new_repository)
+        try:
+            Repo.init_bare(repo_dir, mkdir=True)
+        except:
+            pass
+        else:
+            try:
+                backen.repos[str('/' + new_repository)] = Repo(repo_dir)
+            except:
+                pass
+            finally:
+                repos = ";".join([c for c in backen.repos.keys()])
+
+    yield env.get_template("index.html").render(repos_list=repos).encode()
 
 class InitRepoPath():
     def __init__(self, CONFIG_NAME=None):
@@ -71,7 +91,7 @@ class InitRepoPath():
         return str(self.config)
         
 HTTPGitApplication.services[('GET', re.compile('^/$'))] = get_root_index
-HTTPGitApplication.services[('GET', re.compile('^/repository'))] = get_root_index
+HTTPGitApplication.services[('GET', re.compile('^/repository'))] = add_new_repository
 
 def main():
     """Entry point for starting an HTTP git server."""
