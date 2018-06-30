@@ -7,7 +7,7 @@ Wants=network.target
 User=simplegitweb
 Group=simplegitweb
 Type=simple
-ExecStart=/usr/bin/simplegitweb.py --config /etc/simplegitweb.conf
+ExecStart=/usr/bin/gitwebserver.py --config /etc/simplegitweb.conf
 Restart=on-failure
 
 [Install]

@@ -22,13 +22,13 @@ then
 fi
 
 
-if ! [[ -f '/usr/bin/simplegitweb.py' ]]
+if ! [[ -f '/usr/bin/gitwebserver.py' ]]
 then
-    cp -fv simplegitweb.py /usr/bin/simplegitweb.py
-    chomd +x /usr/bin/simplegitweb.py
+    cp -fv gitwebserver.py /usr/bin/gitwebserver.py
+    chmod +x /usr/bin/gitwebserver.py
 fi
 
-cp -fv simplegitweb.service /etc/systemd/system/multi-user.target.wants/simplegitweb.service
+cp -fv simplegitweb.service /etc/systemd/system/simplegitweb.service
 systemctl daemon-reload
 systemctl enable simplegitweb
 systemctl start simplegitweb

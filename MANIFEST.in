@@ -1,2 +1,2 @@
 recursive-include simplegitweb/templates *.html
-include README
+include README.md
