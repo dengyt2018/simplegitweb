@@ -114,5 +114,4 @@ os
 .project
 .pydevproject
 .settings/
-gitserver/gitserver.json
-gitserver/gitserver.conf
+simplegitweb/gitserver.conf
