@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name = 'simplegitweb',
@@ -10,16 +10,17 @@ setup(
     description = ('A Python git web server that base on dulwich lib'),
     license = 'Apache License, Version 2.0',
     keywords = 'git gitserver gitweb version control',
-    packages = find_packages(exclude=['*.git', '*.conf']),
+    packages = ['simplegitweb', 'simplegitweb.templates'],
     package_data = {
-        'simplegitweb': 'templates/*.html'
+        'simplegitweb': ['templates/*.html']
         },
-    include_package_data=True,
+    include_package_data = True,
     install_requires=[
         'dulwich>=0.19.0',
         'pathlib>=1.0.0',
         'configparser>=3.5.0',
-        'Jinja2>=2.10'
+        'Jinja2>=2.0',
+        'click>=6.0'
         ],
     zip_safe = False
     )

@@ -2,7 +2,7 @@ from pathlib import Path
 from configparser import ConfigParser
 import copy
 import os
-
+import click
 
 from dulwich.repo import Repo
 from dulwich.web import *
@@ -65,10 +65,12 @@ HTTPGitApplication.services[('GET', re.compile('^/repository'))] = add_new_repos
 
 class InitRepoPath():
 
-    def __init__(self):
+    def __init__(self, config_path=None):
         self.config = ConfigParser()
-
-        CONFIG_NAME = 'gitserver.conf'
+        if (config_path):
+            CONFIG_NAME = config_path
+        else:
+            CONFIG_NAME = 'simplegitweb.conf'
         try:
             self.home_path = os.path.join(str(Path.home()), "."+CONFIG_NAME)
         except AttributeError:
@@ -89,10 +91,8 @@ class InitRepoPath():
                 try:
                     with open(path, 'w') as configfile:
                         self.config.write(configfile)
-                except (PermissionError, IOError):
-                    continue
                 except:
-                    pass
+                    continue
     
     def get_scanpath(self):
         if self.config["DEFAULT"]['scanpath']:
@@ -145,9 +145,11 @@ class InitRepoPath():
                 
         return backends
 
-def main():
+@click.command()
+@click.option('--config', help='set the simplegitweb.conf file path.')
+def main(config=None):
     """Entry point for starting an HTTP git server."""
-    init = InitRepoPath()
+    init = InitRepoPath(config)
 
     listen_address, port = init.get_listen_address()
 
