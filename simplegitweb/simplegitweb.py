@@ -3,6 +3,7 @@ from configparser import ConfigParser
 import copy
 import os
 import click
+from sys import version_info
 
 from dulwich.repo import Repo
 from dulwich.web import *
@@ -13,6 +14,9 @@ try:
     from urlparse import parse_qs
 except ImportError:
     from urllib.parse import parse_qs
+
+if version_info[0] == 2:
+    FileNotFoundError = OSError
 
 env = Environment(
     loader=PackageLoader(__name__, 'templates'),
