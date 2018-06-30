@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name = 'simplegitweb',
-    version = '0.1.3',
+    version = '0.1.5',
     author = 'dengyt',
     author_email = 'dengyt@dengyt.net',
     description = ('A Python git web server that base on dulwich lib'),
