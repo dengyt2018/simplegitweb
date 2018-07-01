@@ -11,7 +11,7 @@ A Python git web server that base on dulwich lib.
 ## use
 gitwebserver.py
 ```python
-from simplegitweb import simplegitweb as gitweb
+from simplegitweb import gitwebserver as gitweb
 if __name__ == '__main__':
     gitweb.main()
 ```
