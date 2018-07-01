@@ -28,7 +28,7 @@ then
     chmod +x /usr/bin/gitwebserver.py
 fi
 
-cp -fv simplegitweb.service /etc/systemd/system/simplegitweb.service
+yes | cp -fv simplegitweb.service /etc/systemd/system/simplegitweb.service
 systemctl daemon-reload
 systemctl enable simplegitweb
 systemctl start simplegitweb
