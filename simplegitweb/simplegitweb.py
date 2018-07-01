@@ -1,6 +1,5 @@
 from pathlib import Path
 from configparser import ConfigParser
-import copy
 import os
 import click
 from sys import version_info
@@ -26,19 +25,18 @@ env = Environment(
 
 def get_root_index(req, backen, mat):
     req.respond(HTTP_OK, 'text/html')
-    repos = ";".join([c for c in backen.repos.keys()])
-
-    yield env.get_template("index_base.html").render(repos_list=repos).encode()
+    repos = [c for c in backen.repos.keys()]
+    yield env.get_template("index_base.html").render(repos=repos).encode()
 
 def add_new_repository(req, backen, mat):
     req.respond(HTTP_OK, 'text/html')
-    repos = ";".join([c for c in backen.repos.keys()])
+    repos = [c for c in backen.repos.keys()]
     repos_make_message = None
     repos_make = False
     params = parse_qs(req.environ['QUERY_STRING'])
     new_repository = params.get('add_new_repository', [None])[0]+".git"
 
-    if new_repository and new_repository not in repos.split(";"):
+    if new_repository and new_repository not in repos:
         repo_dir = os.path.join(InitRepoPath().get_scanpath(), new_repository)
         try:
             Repo.init_bare(repo_dir, mkdir=True)
@@ -54,13 +52,12 @@ def add_new_repository(req, backen, mat):
             except:
                 pass
             finally:
-                repos = ";".join([c for c in backen.repos.keys()])
+                repos = [c for c in backen.repos.keys()]
                 repos_make = True
 
-    yield env.get_template("add_new_repository.html").render(
-                                                            repos_list=repos,
-                                                            repos_make_message=repos_make_message,
-                                                            repos_make=repos_make).encode()
+    yield env.get_template("add_new_repository.html").render(repos=repos,
+                                                             repos_make_message=repos_make_message,
+                                                             repos_make=repos_make).encode()
 
         
 HTTPGitApplication.services[('GET', re.compile('^/$'))] = get_root_index
@@ -116,21 +113,17 @@ class InitRepoPath():
         path = self.get_scanpath()
         backends = dict()
         
-        def create_testRepo():
+        def create_scanpath():
             try:
                 os.makedirs(path)
             except:
                 return []
-            else:
-                testRepo = "testRepo.git"
-                repo = Repo.init_bare(os.path.join(path, testRepo), mkdir=True)
-                backends[str('/') + testRepo] = repo
             return os.listdir(path)
 
         try:
             reposdir = os.listdir(path)
         except FileNotFoundError:
-            reposdir = create_testRepo()
+            reposdir = create_scanpath()
 
         for i in reposdir:
             if i == ".git":
@@ -145,7 +138,7 @@ class InitRepoPath():
             del repo
 
         if not backends:
-            create_testRepo()
+            create_scanpath()
                 
         return backends
 

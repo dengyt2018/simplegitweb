@@ -6,23 +6,10 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
 <script type="text/javascript">
-var repos = "{{ repos_list }}";
-if (repos.indexOf(';')) {
-	repos = repos.split(';');
-} else {
-	repos = [repos];
-}
 if (!window.location.origin) {
   window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
 }
 origin = window.location.origin;
-l = repos.length;
-
-$(document).ready(function(){
-	for (i=0; i < l; i++) {
-		$("#server_list").append("<tr><td>"+origin+repos[i]+"</td></tr>");	
-	}
-});
 
 function check_submit() {
 	var x = document.forms["add_new_repository"]["add_new_repository"].value;
@@ -31,7 +18,6 @@ function check_submit() {
 		return false;
 	}
 }
-{% block repo_message_script %} {% endblock %}
 </script>
 </head>
 <body>
@@ -42,7 +28,14 @@ function check_submit() {
 			<th>Projects</th>
 		</tr>
 	</thead>
-	<tbody id="server_list">
+	<tbody>
+		{% if repos %}
+			{% for repo in repos %}
+				<tr><td><script>document.write(origin)</script>{{ repo }}</td></tr>
+			{% endfor %}
+		{% else %}
+			<tr><td><script>document.write(origin)</script></td></tr>
+		{% endif %}
 	</tbody>
 	</table>
 </div>
@@ -56,7 +49,6 @@ function check_submit() {
 		<button type="submit" class="btn btn-primary">Initialize a bare Repository</button>
 	</form>
 </div>
-
 {% block repo_message %}{% endblock %}
 </body>
 </html>
