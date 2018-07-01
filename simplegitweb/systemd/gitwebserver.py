@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from simplegitweb import simplegitweb as gitweb
+from simplegitweb import gitwebserver as gitweb
 
 if __name__ == '__main__':
     gitweb.main()
