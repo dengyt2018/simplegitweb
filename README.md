@@ -6,7 +6,7 @@ A Python git web server that base on dulwich lib.
 ## install
     python setup.py install
     or pip install simplegitweb
-    then find bash script "simplegitweb/systemd/install_service.sh" `bash install_service.sh`
+    then find and run bash script "simplegitweb/systemd/install_service.sh" install systemd service
 
 ## use
 gitwebserver.py
